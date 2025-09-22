@@ -57,9 +57,7 @@ java SnakeAndLadderGame
 
 ## Class Diagram
 
-View the system architecture in: **[ClassDiagram.puml](ClassDiagram.puml)**
-
-_To generate PNG: `plantuml ClassDiagram.puml`_
+![Class Diagram](ClassDiagram.png)
 
 ## Sample Usage
 

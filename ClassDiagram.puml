@@ -1,0 +1,173 @@
+@startuml SnakeAndLadderClassDiagram
+!theme plain
+
+' Value Objects
+class Position {
+    - value: int
+    + Position(value: int)
+    + getValue(): int
+    + equals(obj: Object): boolean
+    + hashCode(): int
+    + toString(): String
+}
+
+class Dice {
+    - {static} instance: Dice
+    - faces: int
+    - random: Random
+    - Dice()
+    + {static} getInstance(): Dice
+    + roll(): int
+}
+
+' Entities
+class BoardEntity {
+    - start: Position
+    - end: Position
+    - type: EntityType
+    + BoardEntity(start: Position, end: Position, type: EntityType)
+    + getStart(): Position
+    + getEnd(): Position
+    + getType(): EntityType
+    + {static} createSnake(start: Position, end: Position): BoardEntity
+    + {static} createLadder(start: Position, end: Position): BoardEntity
+    + toString(): String
+}
+
+enum EntityType {
+    SNAKE
+    LADDER
+}
+
+class TurnResult {
+    - player: IPlayer
+    - diceRoll: int
+    - startPosition: Position
+    - endPosition: Position
+    - extraTurn: boolean
+    - description: String
+    + TurnResult(player: IPlayer, diceRoll: int, startPosition: Position, endPosition: Position, extraTurn: boolean, description: String)
+    + getPlayer(): IPlayer
+    + getDiceRoll(): int
+    + getStartPosition(): Position
+    + getEndPosition(): Position
+    + hasExtraTurn(): boolean
+    + getDescription(): String
+}
+
+' Player Hierarchy
+interface IPlayer {
+    + getName(): String
+    + getCurrentPosition(): Position
+    + setPosition(position: Position): void
+    + hasWon(): boolean
+    + getId(): int
+    + takeTurn(dice: Dice): int
+}
+
+abstract class Player {
+    # name: String
+    # currentPosition: Position
+    # id: int
+    + Player(name: String, id: int, startPosition: Position)
+    + getName(): String
+    + getCurrentPosition(): Position
+    + setPosition(position: Position): void
+    + hasWon(): boolean
+    + getId(): int
+    + {abstract} takeTurn(dice: Dice): int
+}
+
+class HumanPlayer {
+    + HumanPlayer(name: String, id: int, startPosition: Position)
+    + takeTurn(dice: Dice): int
+}
+
+class BotPlayer {
+    + BotPlayer(name: String, id: int, startPosition: Position)
+    + takeTurn(dice: Dice): int
+}
+
+' Strategy Pattern for Rules
+interface GameRules {
+    + shouldGetExtraTurn(diceRoll: int, consecutiveRolls: int): boolean
+    + shouldEndGame(player: IPlayer): boolean
+    + isValidMove(from: Position, to: Position): boolean
+    + hasWon(player: IPlayer, boardSize: int): boolean
+}
+
+class StandardRules {
+    + shouldGetExtraTurn(diceRoll: int, consecutiveRolls: int): boolean
+    + shouldEndGame(player: IPlayer): boolean
+    + isValidMove(from: Position, to: Position): boolean
+    + hasWon(player: IPlayer, boardSize: int): boolean
+}
+
+class NoExtraChanceRules {
+    + shouldGetExtraTurn(diceRoll: int, consecutiveRolls: int): boolean
+    + shouldEndGame(player: IPlayer): boolean
+    + isValidMove(from: Position, to: Position): boolean
+    + hasWon(player: IPlayer, boardSize: int): boolean
+}
+
+' Board Management
+class Board {
+    - size: int
+    - entities: Map<Position, BoardEntity>
+    + Board(size: int)
+    + getSize(): int
+    + addEntity(entity: BoardEntity): void
+    + getEntity(position: Position): BoardEntity
+    + hasEntity(position: Position): boolean
+    + printBoard(): void
+}
+
+' Game Orchestration
+class Game {
+    - board: Board
+    - players: List<IPlayer>
+    - gameRules: GameRules
+    - dice: Dice
+    - consecutiveRollsMap: Map<IPlayer, Integer>
+    + Game(board: Board, players: List<IPlayer>, gameRules: GameRules)
+    + playTurn(player: IPlayer): TurnResult
+    - movePlayer(player: IPlayer, diceRoll: int): TurnResult
+    - checkForWinner(): IPlayer
+    + getWinner(): IPlayer
+    + isGameFinished(): boolean
+    + getCurrentGameState(): String
+}
+
+class SnakeAndLadderGame {
+    + {static} main(args: String[]): void
+}
+
+' Relationships
+IPlayer <|.. Player : implements
+Player <|-- HumanPlayer : extends
+Player <|-- BotPlayer : extends
+
+GameRules <|.. StandardRules : implements
+GameRules <|.. NoExtraChanceRules : implements
+
+BoardEntity *-- EntityType : type
+BoardEntity *-- Position : start
+BoardEntity *-- Position : end
+
+TurnResult *-- IPlayer : player
+TurnResult *-- Position : startPosition
+TurnResult *-- Position : endPosition
+
+Board o-- BoardEntity : entities
+Board *-- Position : uses
+
+Game *-- Board : board
+Game o-- IPlayer : players
+Game *-- GameRules : gameRules
+Game *-- Dice : dice
+
+note right of Dice : Singleton Pattern
+note right of GameRules : Strategy Pattern
+note right of BoardEntity : Factory Methods for\nSnake and Ladder creation
+
+@enduml
